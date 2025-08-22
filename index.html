@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Moisture & Weight Calculator</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#10b981;--muted:#94a3b8;--glass:rgba(255,255,255,0.04)}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Helvetica,Arial;color:#e6eef6;background:linear-gradient(180deg,#071023 0%, #081226 100%);}
+    .wrap{max-width:700px;margin:36px auto;padding:20px;}
+    h1{font-size:22px;margin:0 0 12px;text-align:center}
+    p.lead{color:var(--muted);margin-top:0;margin-bottom:18px;text-align:center}
+    .card{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 6px 18px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03);margin-bottom:20px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;font-size:14px}
+    .row{display:flex;gap:10px;margin-top:12px}
+    .btn{background:var(--accent);color:#011018;padding:8px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .result{margin-top:12px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.02)}
+    .small{font-size:13px;color:var(--muted)}
+    .tabs{display:flex;justify-content:center;margin-bottom:16px}
+    .tab{flex:1;text-align:center;padding:10px;cursor:pointer;border-bottom:2px solid transparent}
+    .tab.active{border-color:var(--accent);color:var(--accent);font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Moisture & Weight Calculator</h1>
+    <p class="lead">Switch between calculators: <strong>Final Weight (Fw)</strong> and <strong>Total Moisture (Tm)</strong></p>
+
+    <div class="tabs">
+      <div id="tab-fw" class="tab active">Final Weight (Fw)</div>
+      <div id="tab-tm" class="tab">Total Moisture (Tm)</div>
+    </div>
+
+    <!-- Task 01: Final Weight -->
+    <div class="card" id="card-fw">
+      <h2 style="margin:0 0 8px">Final Weight (Fw)</h2>
+      <div class="small">Formula: <code>Fw = Tw + sw * (1 - Tm/100)</code></div>
+      <div style="height:10px"></div>
+
+      <label for="tw">Tare weight (Tw)</label>
+      <input id="tw" type="number" step="any" placeholder="e.g. 12.00" />
+
+      <label for="sw" style="margin-top:8px">Sample weight (sw)</label>
+      <input id="sw" type="number" step="any" placeholder="e.g. 50.00" />
+
+      <label for="tm" style="margin-top:8px">Total moisture (%) — Tm</label>
+      <input id="tm" type="number" step="any" placeholder="e.g. 2.06" />
+
+      <label for="roundmode" style="margin-top:8px">Force whole-number output</label>
+      <select id="roundmode">
+        <option value="round">Round to nearest integer (default)</option>
+        <option value="floor">Truncate (round down)</option>
+        <option value="ceil">Round up</option>
+        <option value="none">Allow decimals (no forced whole number)</option>
+      </select>
+
+      <div class="row">
+        <button class="btn" id="calc-fw">Calculate Fw</button>
+        <button class="btn secondary" id="clear-fw">Clear</button>
+      </div>
+
+      <div class="result" id="result-fw" style="display:none">
+        <div><strong>Final Weight (Fw):</strong> <span id="fw-val"></span></div>
+        <div class="small" id="fw-details" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- Task 02: Moisture -->
+    <div class="card" id="card-tm" style="display:none">
+      <h2 style="margin:0 0 8px">Total Moisture (Tm)</h2>
+      <div class="small">Formula: <code>Tm = ((Tw + sw - Fw) / sw) * 100</code></div>
+      <div style="height:10px"></div>
+
+      <label for="tw2">Tare weight (Tw)</label>
+      <input id="tw2" type="number" step="any" placeholder="e.g. 12.00" />
+
+      <label for="sw2" style="margin-top:8px">Sample weight (sw)</label>
+      <input id="sw2" type="number" step="any" placeholder="e.g. 50.00" />
+
+      <label for="fw2" style="margin-top:8px">Final weight (Fw)</label>
+      <input id="fw2" type="number" step="any" placeholder="e.g. 60.00" />
+
+      <div class="row">
+        <button class="btn" id="calc-tm">Calculate Tm</button>
+        <button class="btn secondary" id="clear-tm">Clear</button>
+      </div>
+
+      <div class="result" id="result-tm" style="display:none">
+        <div><strong>Total Moisture (Tm %):</strong> <span id="tm-val"></span></div>
+        <div class="small" id="tm-details" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    function isFiniteNumber(n){ return n !== '' && isFinite(n) }
+
+    // Tab switching
+    $('tab-fw').addEventListener('click', ()=>{
+      $('tab-fw').classList.add('active'); $('tab-tm').classList.remove('active');
+      $('card-fw').style.display='block'; $('card-tm').style.display='none';
+    });
+    $('tab-tm').addEventListener('click', ()=>{
+      $('tab-tm').classList.add('active'); $('tab-fw').classList.remove('active');
+      $('card-tm').style.display='block'; $('card-fw').style.display='none';
+    });
+
+    // Task 01
+    $('calc-fw').addEventListener('click', ()=>{
+      const Tw = parseFloat($('tw').value);
+      const sw = parseFloat($('sw').value);
+      const Tm = parseFloat($('tm').value);
+      const mode = $('roundmode').value;
+
+      if(!isFiniteNumber(Tw) || !isFiniteNumber(sw) || !isFiniteNumber(Tm)){
+        alert('Please enter Tw, sw and Tm (numbers).'); return;
+      }
+      if(sw === 0){ alert('Sample weight (sw) cannot be zero.'); return; }
+
+      const fwExact = Tw + sw * (1 - (Tm/100));
+      let fwDisplayed = fwExact;
+      if(mode === 'round') fwDisplayed = Math.round(fwExact);
+      else if(mode === 'floor') fwDisplayed = Math.floor(fwExact);
+      else if(mode === 'ceil') fwDisplayed = Math.ceil(fwExact);
+
+      const fwText = (mode === 'none') ? fwDisplayed.toFixed(4).replace(/\.0+$/,'') : String(fwDisplayed);
+
+      $('fw-val').textContent = fwText;
+      $('fw-details').innerHTML = `Exact (floating) result: ${fwExact.toFixed(6)}. Display mode: <strong>${mode}</strong>.`;
+      $('result-fw').style.display = 'block';
+    });
+
+    $('clear-fw').addEventListener('click', ()=>{
+      $('tw').value=''; $('sw').value=''; $('tm').value=''; $('result-fw').style.display='none';
+    });
+
+    // Task 02
+    $('calc-tm').addEventListener('click', ()=>{
+      const Tw = parseFloat($('tw2').value);
+      const sw = parseFloat($('sw2').value);
+      const Fw = parseFloat($('fw2').value);
+
+      if(!isFiniteNumber(Tw) || !isFiniteNumber(sw) || !isFiniteNumber(Fw)){
+        alert('Please enter Tw, sw and Fw (numbers).'); return;
+      }
+      if(sw === 0){ alert('Sample weight (sw) cannot be zero.'); return; }
+
+      const Tm = ((Tw + sw - Fw) / sw) * 100;
+      $('tm-val').textContent = Tm.toFixed(4) + '%';
+      $('tm-details').innerHTML = `Computed from formula Tm = ((Tw + sw - Fw)/sw)*100. Numerator: ${(Tw+sw-Fw).toFixed(6)}.`;
+      $('result-tm').style.display='block';
+    });
+
+    $('clear-tm').addEventListener('click', ()=>{
+      $('tw2').value=''; $('sw2').value=''; $('fw2').value=''; $('result-tm').style.display='none';
+    });
+
+    // PWA service worker registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err=>console.log('SW registration failed', err));
+    }
+  </script>
+</body>
+</html>
