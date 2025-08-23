@@ -109,7 +109,7 @@
       $('card-tm').style.display='block'; $('card-fw').style.display='none';
     });
 
-    // Task 01
+    // Task 01: Final Weight
     $('calc-fw').addEventListener('click', ()=>{
       const Tw = parseFloat($('tw').value);
       const sw = parseFloat($('sw').value);
@@ -129,8 +129,18 @@
 
       const fwText = (mode === 'none') ? fwDisplayed.toFixed(4).replace(/\.0+$/,'') : String(fwDisplayed);
 
+      // Adjusted Tm when Fw is rounded
+      let adjustedTm = null;
+      if(mode !== 'none') {
+        adjustedTm = ((Tw + sw - fwDisplayed) / sw) * 100;
+      }
+
       $('fw-val').textContent = fwText;
-      $('fw-details').innerHTML = `Exact (floating) result: ${fwExact.toFixed(6)}. Display mode: <strong>${mode}</strong>.`;
+      $('fw-details').innerHTML = `
+        Exact (floating) result: ${fwExact.toFixed(6)}.<br>
+        Display mode: <strong>${mode}</strong>.
+        ${adjustedTm !== null ? `<br>Adjusted Tm for rounded Fw: ${adjustedTm.toFixed(4)}%` : ""}
+      `;
       $('result-fw').style.display = 'block';
     });
 
@@ -138,7 +148,7 @@
       $('tw').value=''; $('sw').value=''; $('tm').value=''; $('result-fw').style.display='none';
     });
 
-    // Task 02
+    // Task 02: Moisture
     $('calc-tm').addEventListener('click', ()=>{
       const Tw = parseFloat($('tw2').value);
       const sw = parseFloat($('sw2').value);
@@ -161,7 +171,8 @@
 
     // PWA service worker registration
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(err=>console.log('SW registration failed', err));
+      navigator.serviceWorker.register('sw.js')
+        .catch(err => console.log('SW registration failed', err));
     }
   </script>
 </body>
